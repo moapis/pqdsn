@@ -1,0 +1,13 @@
+dist: bionic
+
+language: go
+go:
+  - "1.6"
+  - "1.15"
+  - master
+  
+script:
+  - go test -race -coverprofile=pqdsn.out -covermode=atomic
+
+after_script:
+  - bash <(curl -s https://codecov.io/bash) -f '*.out'
