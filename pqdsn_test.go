@@ -6,8 +6,8 @@
 package pqdsn
 
 import (
+	"bytes"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -50,8 +50,8 @@ func Test_addToBuilder(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := new(strings.Builder)
-			addToBuilder(b, tt.args.k, tt.args.v, tt.args.esc)
+			b := new(bytes.Buffer)
+			addToBuffer(b, tt.args.k, tt.args.v, tt.args.esc)
 
 			if got := b.String(); got != tt.want {
 				t.Errorf("addToBuilder() = %v, want %v", got, tt.want)

@@ -6,6 +6,7 @@
 package pqdsn
 
 import (
+	"bytes"
 	"fmt"
 	"reflect"
 	"strings"
@@ -42,9 +43,11 @@ type Parameters struct {
 	SSLcert                 string  `json:"sslcert,omitempty"`                                                   // Cert file location. The file must contain PEM encoded data.
 	SSLkey                  string  `json:"sslkey,omitempty"`                                                    // Key file location. The file must contain PEM encoded data.
 	SSLrootcert             string  `json:"sslrootcert,omitempty"`                                               // The location of the root certificate file. The file must contain PEM encoded data.
+
+	buff *bytes.Buffer // Re-usable buffer
 }
 
-func addToBuilder(b *strings.Builder, k string, v interface{}, esc bool) {
+func addToBuffer(b *bytes.Buffer, k string, v interface{}, esc bool) {
 	if b.Len() > 0 {
 		b.WriteRune(' ')
 	}
@@ -76,25 +79,27 @@ func key(field reflect.StructField) string {
 }
 
 func (p Parameters) buildString(esc bool) string {
-	var b strings.Builder
+	if p.buff == nil {
+		p.buff = new(bytes.Buffer)
+	}
+	defer p.buff.Reset()
 
 	v := reflect.ValueOf(p)
 	t := v.Type()
 
 	for i := 0; i < v.NumField(); i++ {
-
-		if !v.Field(i).IsZero() {
-			addToBuilder(&b, key(t.Field(i)), v.Field(i).Interface(), esc)
+		if v := v.Field(i); v.CanInterface() && !v.IsZero() {
+			addToBuffer(p.buff, key(t.Field(i)), v.Interface(), esc)
 		}
 	}
 
-	return b.String()
+	return p.buff.String()
 }
 
 // String returns a Data Source Name in the format of:
 //
 //     "dbname=pqgotest user=pqgotest sslmode=verify-full"
-func (p Parameters) String() string {
+func (p *Parameters) String() string {
 	return p.buildString(false)
 }
 
@@ -104,6 +109,6 @@ func (p Parameters) String() string {
 // Output is in the format of:
 //
 //    "dbname=pqgotest user='space man' password='it\'s valid'"
-func (p Parameters) EscapedString() string {
+func (p *Parameters) EscapedString() string {
 	return p.buildString(true)
 }
