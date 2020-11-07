@@ -67,25 +67,78 @@ func Test_key(t *testing.T) {
 }
 
 func TestParameters_String(t *testing.T) {
-	p := Parameters{
-		"nameofdb",
-		"itisme",
-		"secret",
-		"localtoast",
-		789,
-		SSLVerifyFull,
-		"This-App",
-		22,
-		"/path/to/cert",
-		"/path/to/key",
-		"/path/to/rootcert",
+	type fields struct {
+		DBname                  string
+		User                    string
+		Password                string
+		Host                    string
+		Port                    uint16
+		SSLmode                 SSLMode
+		FallbackApplicationName string
+		ConnectTimeout          uint
+		SSLcert                 string
+		SSLkey                  string
+		SSLrootcert             string
 	}
-
-	const want = "dbname=nameofdb user=itisme password=secret host=localtoast port=789 sslmode=verify-full fallback_application_name=This-App connect_timeout=22 sslcert=/path/to/cert sslkey=/path/to/key sslrootcert=/path/to/rootcert"
-
-	got := p.String()
-
-	if got != want {
-		t.Errorf("Parameters.String() = \n%s\nwant\n%s", got, want)
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			"No fields",
+			fields{},
+			"",
+		},
+		{
+			"Some fields",
+			fields{
+				DBname:                  "pqgotest",
+				User:                    "pqgotest",
+				Password:                "secret",
+				Host:                    "db.example.com",
+				Port:                    1234,
+				SSLmode:                 SSLVerifyFull,
+				FallbackApplicationName: "'pqdsn test'",
+			},
+			"dbname=pqgotest user=pqgotest password=secret host=db.example.com port=1234 sslmode=verify-full fallback_application_name='pqdsn test'",
+		},
+		{
+			"All fields",
+			fields{
+				"nameofdb",
+				"itisme",
+				"secret",
+				"localtoast",
+				789,
+				SSLVerifyFull,
+				"This-App",
+				22,
+				"/path/to/cert",
+				"/path/to/key",
+				"/path/to/rootcert",
+			},
+			"dbname=nameofdb user=itisme password=secret host=localtoast port=789 sslmode=verify-full fallback_application_name=This-App connect_timeout=22 sslcert=/path/to/cert sslkey=/path/to/key sslrootcert=/path/to/rootcert",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := Parameters{
+				DBname:                  tt.fields.DBname,
+				User:                    tt.fields.User,
+				Password:                tt.fields.Password,
+				Host:                    tt.fields.Host,
+				Port:                    tt.fields.Port,
+				SSLmode:                 tt.fields.SSLmode,
+				FallbackApplicationName: tt.fields.FallbackApplicationName,
+				ConnectTimeout:          tt.fields.ConnectTimeout,
+				SSLcert:                 tt.fields.SSLcert,
+				SSLkey:                  tt.fields.SSLkey,
+				SSLrootcert:             tt.fields.SSLrootcert,
+			}
+			if got := p.String(); got != tt.want {
+				t.Errorf("Parameters.String() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

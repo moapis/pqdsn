@@ -63,7 +63,7 @@ func key(field reflect.StructField) string {
 
 // String returns a Data Source Name in the format of:
 //
-//     "user=pqgotest dbname=pqgotest sslmode=verify-full"
+//     "dbname=pqgotest user=pqgotest sslmode=verify-full"
 func (p Parameters) String() string {
 	var b strings.Builder
 
@@ -72,7 +72,7 @@ func (p Parameters) String() string {
 
 	for i := 0; i < v.NumField(); i++ {
 
-		if v.Field(i).IsValid() {
+		if !v.Field(i).IsZero() {
 			addToBuilder(&b, key(t.Field(i)), v.Field(i).Interface())
 		}
 	}
