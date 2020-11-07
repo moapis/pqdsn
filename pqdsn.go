@@ -78,13 +78,13 @@ func key(field reflect.StructField) string {
 	return strings.ToLower(field.Name)
 }
 
-func (p Parameters) buildString(esc bool) string {
+func (p *Parameters) buildString(esc bool) string {
 	if p.buff == nil {
 		p.buff = new(bytes.Buffer)
 	}
 	defer p.buff.Reset()
 
-	v := reflect.ValueOf(p)
+	v := reflect.ValueOf(*p)
 	t := v.Type()
 
 	for i := 0; i < v.NumField(); i++ {

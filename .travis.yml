@@ -8,6 +8,7 @@ go:
   
 script:
   - go test -race -coverprofile=pqdsn.out -covermode=atomic
+  - go test -benchmem -bench .
 
 after_script:
   - bash <(curl -s https://codecov.io/bash) -f '*.out'

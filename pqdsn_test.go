@@ -229,3 +229,51 @@ func TestParameters_EscapedString(t *testing.T) {
 		})
 	}
 }
+
+func BenchmarkParameters_String(t *testing.B) {
+	for i := 0; i < t.N; i++ {
+		p := Parameters{
+			DBname:                  "pqgotest",
+			User:                    "pqgotest",
+			Password:                `'it\'s secret'`,
+			Host:                    "db.example.com",
+			Port:                    1234,
+			SSLmode:                 SSLVerifyFull,
+			FallbackApplicationName: "'pqdsn test'",
+		}
+
+		_ = p.String()
+	}
+}
+
+func BenchmarkParameters_String_reUse(t *testing.B) {
+	p := Parameters{
+		DBname:                  "pqgotest",
+		User:                    "pqgotest",
+		Password:                `'it\'s secret'`,
+		Host:                    "db.example.com",
+		Port:                    1234,
+		SSLmode:                 SSLVerifyFull,
+		FallbackApplicationName: "'pqdsn test'",
+	}
+
+	for i := 0; i < t.N; i++ {
+		_ = p.String()
+	}
+}
+
+func BenchmarkParameters_EscapedString_esc(t *testing.B) {
+	p := Parameters{
+		DBname:                  "pqgotest",
+		User:                    "pqgotest",
+		Password:                "it's secret",
+		Host:                    "db.example.com",
+		Port:                    1234,
+		SSLmode:                 SSLVerifyFull,
+		FallbackApplicationName: "pqdsn test",
+	}
+
+	for i := 0; i < t.N; i++ {
+		_ = p.EscapedString()
+	}
+}

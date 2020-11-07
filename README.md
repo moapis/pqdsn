@@ -36,3 +36,16 @@ Output:
 ````
 dbname=pqgotest user=pqgotest password=secret host=db.example.com port=1234 sslmode=verify-full fallback_application_name='pqdsn test'
 ````
+
+## Benchmarks
+
+````
+goos: linux
+goarch: amd64
+pkg: github.com/moapis/pqdsn
+BenchmarkParameters_String-8                      391767              2661 ns/op             808 B/op         25 allocs/op
+BenchmarkParameters_String_reUse-8                477589              2539 ns/op             536 B/op         22 allocs/op
+BenchmarkParameters_EscapedString_esc-8           409527              2874 ns/op             648 B/op         29 allocs/op
+PASS
+ok      github.com/moapis/pqdsn 5.447s
+````
