@@ -44,13 +44,27 @@ type Parameters struct {
 	SSLrootcert             string  `json:"sslrootcert,omitempty"`                                               // The location of the root certificate file. The file must contain PEM encoded data.
 }
 
-func addToBuilder(b *strings.Builder, k string, v interface{}) {
-	// strings.Builder never errors, so ignoring error
+func addToBuilder(b *strings.Builder, k string, v interface{}, esc bool) {
 	if b.Len() > 0 {
-		fmt.Fprintf(b, " %s=%v", k, v)
-	} else {
-		fmt.Fprintf(b, "%s=%v", k, v)
+		b.WriteRune(' ')
 	}
+
+	if esc {
+		if s, ok := v.(string); ok {
+			s = strings.ReplaceAll(s, "'", `\'`) // Escape single quotes
+
+			if strings.ContainsRune(s, ' ') {
+				fmt.Fprintf(b, "%s='%s'", k, s)
+			} else {
+				fmt.Fprintf(b, "%s=%s", k, s)
+			}
+
+			return
+		}
+	}
+
+	// strings.Builder never errors, so ignoring error
+	fmt.Fprintf(b, "%s=%v", k, v)
 }
 
 func key(field reflect.StructField) string {
@@ -61,10 +75,7 @@ func key(field reflect.StructField) string {
 	return strings.ToLower(field.Name)
 }
 
-// String returns a Data Source Name in the format of:
-//
-//     "dbname=pqgotest user=pqgotest sslmode=verify-full"
-func (p Parameters) String() string {
+func (p Parameters) buildString(esc bool) string {
 	var b strings.Builder
 
 	v := reflect.ValueOf(p)
@@ -73,9 +84,26 @@ func (p Parameters) String() string {
 	for i := 0; i < v.NumField(); i++ {
 
 		if !v.Field(i).IsZero() {
-			addToBuilder(&b, key(t.Field(i)), v.Field(i).Interface())
+			addToBuilder(&b, key(t.Field(i)), v.Field(i).Interface(), esc)
 		}
 	}
 
 	return b.String()
+}
+
+// String returns a Data Source Name in the format of:
+//
+//     "dbname=pqgotest user=pqgotest sslmode=verify-full"
+func (p Parameters) String() string {
+	return p.buildString(false)
+}
+
+// EscapedString single quote (') entries containing spaces.
+// Existing single quotes in values are escaped by a back slash (\).
+//
+// Output is in the format of:
+//
+//    "dbname=pqgotest user='space man' password='it\'s valid'"
+func (p Parameters) EscapedString() string {
+	return p.buildString(true)
 }
