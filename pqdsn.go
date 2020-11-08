@@ -108,3 +108,43 @@ func (p *Parameters) String() string {
 func (p *Parameters) EscapedString() string {
 	return p.buildString(true)
 }
+
+// Merge b into a and return a copy.
+// Non-emtpy values from b overwrite a.
+func Merge(a, b Parameters) Parameters {
+	if b.DBname != "" {
+		a.DBname = b.DBname
+	}
+	if b.User != "" {
+		a.User = b.User
+	}
+	if b.Password != "" {
+		a.Password = b.Password
+	}
+	if b.Host != "" {
+		a.Host = b.Host
+	}
+	if b.Port != 0 {
+		a.Port = b.Port
+	}
+	if b.SSLmode != "" {
+		a.SSLmode = b.SSLmode
+	}
+	if b.FallbackApplicationName != "" {
+		a.FallbackApplicationName = b.FallbackApplicationName
+	}
+	if b.ConnectTimeout != 0 {
+		a.ConnectTimeout = b.ConnectTimeout
+	}
+	if b.SSLcert != "" {
+		a.SSLcert = b.SSLcert
+	}
+	if b.SSLkey != "" {
+		a.SSLkey = b.SSLkey
+	}
+	if b.SSLrootcert != "" {
+		a.SSLrootcert = b.SSLrootcert
+	}
+
+	return a
+}

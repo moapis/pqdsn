@@ -177,3 +177,39 @@ func BenchmarkParameters_EscapedString_esc(t *testing.B) {
 		_ = p.EscapedString()
 	}
 }
+
+func TestMerge(t *testing.T) {
+	a := Parameters{
+		DBname:                  "pqgotest",
+		User:                    "pqgotest",
+		Password:                "it's secret",
+		Host:                    "db.example.com",
+		Port:                    1234,
+		SSLmode:                 SSLVerifyFull,
+		FallbackApplicationName: "pqdsn test",
+	}
+
+	got := Merge(a, Parameters{})
+	if got != a {
+		t.Errorf("Merge() = \n%v\nwant\n%v", got, a)
+	}
+
+	b := Parameters{
+		DBname:                  "name",
+		User:                    "user",
+		Password:                "spanac",
+		Host:                    "example.com",
+		Port:                    21,
+		SSLmode:                 SSLRequire,
+		FallbackApplicationName: "who hoo",
+		ConnectTimeout:          33,
+		SSLcert:                 "/path/to/cert",
+		SSLkey:                  "/path/to/key",
+		SSLrootcert:             "/path/to/rootcert",
+	}
+
+	got = Merge(a, b)
+	if got != b {
+		t.Errorf("Merge() = \n%v\nwant\n%v", got, b)
+	}
+}
