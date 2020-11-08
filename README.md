@@ -43,9 +43,9 @@ dbname=pqgotest user=pqgotest password=secret host=db.example.com port=1234 sslm
 goos: linux
 goarch: amd64
 pkg: github.com/moapis/pqdsn
-BenchmarkParameters_String-8                      391767              2661 ns/op             808 B/op         25 allocs/op
-BenchmarkParameters_String_reUse-8                477589              2539 ns/op             536 B/op         22 allocs/op
-BenchmarkParameters_EscapedString_esc-8           409527              2874 ns/op             648 B/op         29 allocs/op
+BenchmarkBuilder_addString-8                     2407327               461 ns/op             273 B/op          1 allocs/op
+BenchmarkParameters_String-8                     2853232               423 ns/op             356 B/op          4 allocs/op
+BenchmarkParameters_EscapedString_esc-8          1000000              1099 ns/op             644 B/op          5 allocs/op
 PASS
-ok      github.com/moapis/pqdsn 5.447s
+ok      github.com/moapis/pqdsn 4.398s
 ````

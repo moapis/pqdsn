@@ -6,92 +6,8 @@
 package pqdsn
 
 import (
-	"bytes"
-	"reflect"
 	"testing"
 )
-
-func Test_addToBuilder(t *testing.T) {
-	type args struct {
-		k   string
-		v   interface{}
-		esc bool
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			"No esc",
-			args{"foo", "bar", false},
-			"foo=bar",
-		},
-		{
-			"esc with plain string",
-			args{"foo", "bar", true},
-			"foo=bar",
-		},
-		{
-			"esc with spaced string",
-			args{"foo", "hello world", true},
-			"foo='hello world'",
-		},
-		{
-			"esc with spaced string with quote",
-			args{"foo", "it's great", true},
-			`foo='it\'s great'`,
-		},
-		{
-			"esc with numeric value",
-			args{"num", 123, true},
-			"num=123",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			b := new(bytes.Buffer)
-			addToBuffer(b, tt.args.k, tt.args.v, tt.args.esc)
-
-			if got := b.String(); got != tt.want {
-				t.Errorf("addToBuilder() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_key(t *testing.T) {
-	tests := []struct {
-		name string
-		want string
-	}{
-		{
-			"DBname",
-			"dbname",
-		},
-		{
-			"FallbackApplicationName",
-			"fallback_application_name",
-		},
-		{
-			"ConnectTimeout",
-			"connect_timeout",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			pt := reflect.TypeOf(Parameters{})
-			field, ok := pt.FieldByName(tt.name)
-			if !ok {
-				t.Fatalf("Test Field Name %q does not exist", tt.name)
-			}
-
-			if got := key(field); got != tt.want {
-				t.Errorf("key() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
 
 func TestParameters_String(t *testing.T) {
 	type fields struct {
@@ -102,7 +18,7 @@ func TestParameters_String(t *testing.T) {
 		Port                    uint16
 		SSLmode                 SSLMode
 		FallbackApplicationName string
-		ConnectTimeout          uint
+		ConnectTimeout          int
 		SSLcert                 string
 		SSLkey                  string
 		SSLrootcert             string
@@ -179,7 +95,7 @@ func TestParameters_EscapedString(t *testing.T) {
 		Port                    uint16
 		SSLmode                 SSLMode
 		FallbackApplicationName string
-		ConnectTimeout          uint
+		ConnectTimeout          int
 		SSLcert                 string
 		SSLkey                  string
 		SSLrootcert             string
@@ -224,29 +140,13 @@ func TestParameters_EscapedString(t *testing.T) {
 				SSLrootcert:             tt.fields.SSLrootcert,
 			}
 			if got := p.EscapedString(); got != tt.want {
-				t.Errorf("Parameters.EscapedString() = %v, want %v", got, tt.want)
+				t.Errorf("Parameters.EscapedString() =\n%v\nwant\n%v", got, tt.want)
 			}
 		})
 	}
 }
 
 func BenchmarkParameters_String(t *testing.B) {
-	for i := 0; i < t.N; i++ {
-		p := Parameters{
-			DBname:                  "pqgotest",
-			User:                    "pqgotest",
-			Password:                `'it\'s secret'`,
-			Host:                    "db.example.com",
-			Port:                    1234,
-			SSLmode:                 SSLVerifyFull,
-			FallbackApplicationName: "'pqdsn test'",
-		}
-
-		_ = p.String()
-	}
-}
-
-func BenchmarkParameters_String_reUse(t *testing.B) {
 	p := Parameters{
 		DBname:                  "pqgotest",
 		User:                    "pqgotest",

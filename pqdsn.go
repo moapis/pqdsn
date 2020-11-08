@@ -5,13 +5,6 @@
 // Package pqdsn offers a type safe way of build Data Source Names for lib/pq.
 package pqdsn
 
-import (
-	"bytes"
-	"fmt"
-	"reflect"
-	"strings"
-)
-
 // SSLMode used for connection
 type SSLMode string
 
@@ -30,6 +23,20 @@ const (
 	SSLVerifyFull SSLMode = "verify-full"
 )
 
+const (
+	dbname                  = "dbname"
+	user                    = "user"
+	password                = "password"
+	host                    = "host"
+	port                    = "port"
+	sslmode                 = "sslmode"
+	fallbackApplicationName = "fallback_application_name"
+	connectTimeout          = "connect_timeout"
+	sslcert                 = "sslcert"
+	sslkey                  = "sslkey"
+	sslrootcert             = "sslrootcert"
+)
+
 // Parameters as defined at https://godoc.org/github.com/lib/pq#hdr-Connection_String_Parameters
 type Parameters struct {
 	DBname                  string  `json:"dbname,omitempty"`                                                    // The name of the database to connect to
@@ -39,61 +46,50 @@ type Parameters struct {
 	Port                    uint16  `json:"port,omitempty"`                                                      // The port to bind to. (default is 5432)
 	SSLmode                 SSLMode `json:"sslmode,omitempty"`                                                   // Whether or not to use SSL (default is require, this is not the default for libpq)
 	FallbackApplicationName string  `json:"fallback_application_name,omitempty" key:"fallback_application_name"` // An application_name to fall back to if one isn't provided.
-	ConnectTimeout          uint    `json:"connect_timeout,omitempty" key:"connect_timeout"`                     // Maximum wait for connection, in seconds. Zero or not specified means wait indefinitely.
+	ConnectTimeout          int     `json:"connect_timeout,omitempty" key:"connect_timeout"`                     // Maximum wait for connection, in seconds. Zero or not specified means wait indefinitely.
 	SSLcert                 string  `json:"sslcert,omitempty"`                                                   // Cert file location. The file must contain PEM encoded data.
 	SSLkey                  string  `json:"sslkey,omitempty"`                                                    // Key file location. The file must contain PEM encoded data.
 	SSLrootcert             string  `json:"sslrootcert,omitempty"`                                               // The location of the root certificate file. The file must contain PEM encoded data.
-
-	buff *bytes.Buffer // Re-usable buffer
 }
 
-func addToBuffer(b *bytes.Buffer, k string, v interface{}, esc bool) {
-	if b.Len() > 0 {
-		b.WriteRune(' ')
+func (p *Parameters) buildString(escape bool) string {
+	b := &builder{escape: escape}
+
+	if p.DBname != "" {
+		b.addString(dbname, p.DBname)
+	}
+	if p.User != "" {
+		b.addString(user, p.User)
+	}
+	if p.Password != "" {
+		b.addString(password, p.Password)
+	}
+	if p.Host != "" {
+		b.addString(host, p.Host)
+	}
+	if p.Port != 0 {
+		b.addInt(port, int(p.Port))
+	}
+	if p.SSLmode != "" {
+		b.addString(sslmode, string(p.SSLmode))
+	}
+	if p.FallbackApplicationName != "" {
+		b.addString(fallbackApplicationName, p.FallbackApplicationName)
+	}
+	if p.ConnectTimeout != 0 {
+		b.addInt(connectTimeout, p.ConnectTimeout)
+	}
+	if p.SSLcert != "" {
+		b.addString(sslcert, p.SSLcert)
+	}
+	if p.SSLkey != "" {
+		b.addString(sslkey, p.SSLkey)
+	}
+	if p.SSLrootcert != "" {
+		b.addString(sslrootcert, p.SSLrootcert)
 	}
 
-	if esc {
-		if s, ok := v.(string); ok {
-			s = strings.ReplaceAll(s, "'", `\'`) // Escape single quotes
-
-			if strings.ContainsRune(s, ' ') {
-				fmt.Fprintf(b, "%s='%s'", k, s)
-			} else {
-				fmt.Fprintf(b, "%s=%s", k, s)
-			}
-
-			return
-		}
-	}
-
-	// strings.Builder never errors, so ignoring error
-	fmt.Fprintf(b, "%s=%v", k, v)
-}
-
-func key(field reflect.StructField) string {
-	if k := field.Tag.Get("key"); k != "" {
-		return k
-	}
-
-	return strings.ToLower(field.Name)
-}
-
-func (p *Parameters) buildString(esc bool) string {
-	if p.buff == nil {
-		p.buff = new(bytes.Buffer)
-	}
-	defer p.buff.Reset()
-
-	v := reflect.ValueOf(*p)
-	t := v.Type()
-
-	for i := 0; i < v.NumField(); i++ {
-		if v := v.Field(i); v.CanInterface() && !v.IsZero() {
-			addToBuffer(p.buff, key(t.Field(i)), v.Interface(), esc)
-		}
-	}
-
-	return p.buff.String()
+	return b.String()
 }
 
 // String returns a Data Source Name in the format of:
