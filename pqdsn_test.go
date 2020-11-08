@@ -2,7 +2,6 @@
 // Use of this source code is governed by a License that can be found in the LICENSE file.
 // SPDX-License-Identifier: BSD-3-Clause
 
-// Package pqdsn offers a type safe way of build Data Source Names for lib/pq.
 package pqdsn
 
 import (

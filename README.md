@@ -49,3 +49,8 @@ BenchmarkParameters_EscapedString_esc-8          1000000              1099 ns/op
 PASS
 ok      github.com/moapis/pqdsn 4.398s
 ````
+
+## License
+
+Copyright (c) 2020, Mohlmann Solutions SRL. All rights reserved.
+Use of this source code is governed by a License that can be found in the LICENSE file.
